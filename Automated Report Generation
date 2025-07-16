@@ -1,0 +1,70 @@
+1. Install Required Libraries
+pip install pandas fpdf
+
+
+2. Sample CSV File (data.csv)
+Save this sample as data.csv:
+csv
+Name,Score
+Alice,85
+Bob,90
+Charlie,78
+David,92
+Eva,88
+
+3. Python Script (report_generator.py)
+import pandas as pd
+from fpdf import FPDF
+
+# Step 1: Read data from CSV
+df = pd.read_csv('data.csv')
+
+# Step 2: Analyze data
+average_score = df['Score'].mean()
+highest_score = df['Score'].max()
+lowest_score = df['Score'].min()
+topper = df.loc[df['Score'].idxmax(), 'Name']
+
+# Step 3: Generate PDF report
+class PDF(FPDF):
+    def header(self):
+        self.set_font('Arial', 'B', 14)
+        self.cell(0, 10, 'Student Score Report', ln=True, align='C')
+        self.ln(10)
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_font('Arial', 'I', 8)
+        self.cell(0, 10, f'Page {self.page_no()}', align='C')
+
+    def chapter_title(self, title):
+        self.set_font('Arial', 'B', 12)
+        self.cell(0, 10, title, ln=True)
+        self.ln(5)
+
+    def chapter_body(self, text):
+        self.set_font('Arial', '', 12)
+        self.multi_cell(0, 10, text)
+        self.ln()
+
+pdf = PDF()
+pdf.add_page()
+
+# Add report summary
+pdf.chapter_title('Summary')
+summary = (
+    f'Average Score: {average_score:.2f}\n'
+    f'Highest Score: {highest_score}\n'
+    f'Lowest Score: {lowest_score}\n'
+    f'Topper: {topper}'
+)
+pdf.chapter_body(summary)
+
+# Add full data table
+pdf.chapter_title('Detailed Scores')
+for i, row in df.iterrows():
+    pdf.chapter_body(f"{row['Name']} - {row['Score']}")
+
+# Save PDF
+pdf.output('student_report.pdf')
+print("PDF report generated as 'student_report.pdf'")
